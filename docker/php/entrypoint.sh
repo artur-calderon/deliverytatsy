@@ -32,15 +32,28 @@ wait_for_mysql() {
     exit 1
 }
 
+# Atualiza/insere chave no .env sem quebrar com aspas, /, &, etc.
 write_env_value() {
     key="$1"
     value="$2"
-    if grep -q "^${key}=" .env; then
-        escaped=$(printf '%s' "$value" | sed -e 's/[\/&]/g')
-        sed -i "s|^${key}=.*|${key}=${escaped}|" .env
-    else
-        printf '%s=%s\n' "$key" "$value" >> .env
-    fi
+    KEY="$key" VALUE="$value" php -r '
+        $key = getenv("KEY");
+        $value = getenv("VALUE");
+        $path = ".env";
+        $lines = file_exists($path) ? file($path, FILE_IGNORE_NEW_LINES) : [];
+        $found = false;
+        foreach ($lines as $i => $line) {
+            if (str_starts_with($line, $key . "=")) {
+                $lines[$i] = $key . "=" . $value;
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            $lines[] = $key . "=" . $value;
+        }
+        file_put_contents($path, implode("\n", $lines) . "\n");
+    '
 }
 
 ensure_app() {
@@ -92,7 +105,6 @@ ensure_permissions() {
         storage/app/public \
         bootstrap/cache
 
-    # Volume montado: garante leitura pelo nginx/php-fpm
     chown -R www-data:www-data /var/www/html 2>/dev/null || true
     chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 }
@@ -110,16 +122,37 @@ wait_for_app_files() {
     exit 1
 }
 
+is_installed() {
+    php -r '
+        try {
+            $pdo = new PDO(
+                "mysql:host=" . getenv("DB_HOST") . ";port=" . (getenv("DB_PORT") ?: "3306") . ";dbname=" . getenv("DB_DATABASE"),
+                getenv("DB_USERNAME"),
+                getenv("DB_PASSWORD") ?: ""
+            );
+            $prefix = getenv("DB_PREFIX") ?: "ti_";
+            $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($prefix . "migrations"));
+            exit($stmt && $stmt->fetch() ? 0 : 1);
+        } catch (Throwable $e) {
+            exit(1);
+        }
+    '
+}
+
 run_install_if_needed() {
     if [ "${SKIP_INSTALL:-false}" = "true" ]; then
         echo "SKIP_INSTALL=true — pulando igniter:install."
         return 0
     fi
 
+    if is_installed; then
+        echo "TastyIgniter ja instalado no banco — pulando igniter:install."
+        return 0
+    fi
+
     echo "Executando php artisan igniter:install --no-interaction..."
-    # Sem --force: se ja estiver instalado, o comando sai sem reinstalar.
     php artisan igniter:install --no-interaction
-    echo "Instalacao concluida (ou ja existia)."
+    echo "Instalacao concluida."
     echo "Admin padrao do seeder: usuario=admin senha=123456 (altere apos o primeiro login)."
 }
 
