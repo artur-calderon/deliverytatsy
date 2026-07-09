@@ -1,0 +1,39 @@
+# Ambiente / segredos
+.env
+.env.*
+!.env.docker.example
+!.env.example
+
+# App TastyIgniter gerado pelo Composer na VPS
+/app/
+!/app/.gitkeep
+
+# Dependencias
+/vendor/
+node_modules/
+
+# Setup wizard (runtime)
+/setup/
+*.log
+
+# Docker / runtime
+docker-compose.override.yml
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Certificados / chaves / Composer auth
+*.pem
+*.key
+*.crt
+*.p12
+auth.json

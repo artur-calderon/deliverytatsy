@@ -1,0 +1,125 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-tastyigniter}
+      MYSQL_USER: ${DB_USERNAME:-tasty}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    networks:
+      - internal
+
+  app:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./app:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - internal
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+
+      # HTTPS
+      - traefik.http.routers.lanchonete.rule=Host(`lanchonete.freddns.org`)
+      - traefik.http.routers.lanchonete.entrypoints=${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}
+      - traefik.http.routers.lanchonete.tls=true
+      - traefik.http.routers.lanchonete.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      - traefik.http.routers.lanchonete.service=lanchonete
+      - traefik.http.services.lanchonete.loadbalancer.server.port=80
+
+      # HTTP -> HTTPS
+      - traefik.http.routers.lanchonete-http.rule=Host(`lanchonete.freddns.org`)
+      - traefik.http.routers.lanchonete-http.entrypoints=${TRAEFIK_ENTRYPOINT_HTTP:-web}
+      - traefik.http.routers.lanchonete-http.middlewares=lanchonete-https-redirect
+      - traefik.http.middlewares.lanchonete-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.lanchonete-https-redirect.redirectscheme.permanent=true
+
+  queue:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      SKIP_INSTALL: "true"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - internal
+
+  scheduler:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      SKIP_INSTALL: "true"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - internal
+
+volumes:
+  mysql_data:
+
+networks:
+  internal:
+    driver: bridge
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
