@@ -35,8 +35,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
 
 # Traduções pt-BR do TastyIgniter
 COPY tastyigniter/v4-admin/pt_BR/4.x/admin.php /var/www/html/lang/vendor/igniter/pt_BR/admin.php
-COPY tastyigniter/v4-main/pt_BR/4.x/main.php /var/www/html/lang/vendor/igniter/pt_BR/main.php
-COPY tastyigniter/v4-system/pt_BR/4.x/system.php /var/www/html/lang/vendor/igniter/pt_BR/system.php
+COPY tastyigniter/v3-main/pt_BR/3.x/main.php /var/www/html/lang/vendor/igniter/pt_BR/main.php
+COPY tastyigniter/v3-system/pt_BR/3.x/system.php /var/www/html/lang/vendor/igniter/pt_BR/system.php
 
 
 WORKDIR /var/www/html
