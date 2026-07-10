@@ -25,18 +25,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-COPY php.ini /usr/local/etc/php/conf.d/zz-tastyigniter.ini
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-tastyigniter.ini
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p /var/www/html \
     && chown -R www-data:www-data /var/www/html
 
 
-# Traduções pt-BR do TastyIgniter
-COPY tastyigniter/v4-admin/pt_BR/4.x/admin.php /var/www/html/lang/vendor/igniter/pt_BR/admin.php
-COPY tastyigniter/v3-main/pt_BR/3.x/main.php /var/www/html/lang/vendor/igniter/pt_BR/main.php
-COPY tastyigniter/v3-system/pt_BR/3.x/system.php /var/www/html/lang/vendor/igniter/pt_BR/system.php
+# Traduções pt-BR do TastyIgniter (copiadas para /var/www/html no entrypoint)
+COPY tastyigniter/v4-admin/pt_BR/4.x/admin.php /usr/local/share/tastyigniter-lang/pt_BR/admin.php
+COPY tastyigniter/v4-admin/pt_BR/4.x/main.php /usr/local/share/tastyigniter-lang/pt_BR/main.php
+COPY tastyigniter/v4-admin/pt_BR/4.x/system.php /usr/local/share/tastyigniter-lang/pt_BR/system.php
 
 
 WORKDIR /var/www/html

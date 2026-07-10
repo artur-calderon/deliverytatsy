@@ -24,8 +24,8 @@ services:
 
   app:
     build:
-      context: ./docker/php
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/php/Dockerfile
     restart: unless-stopped
     env_file:
       - .env.docker
@@ -72,8 +72,8 @@ services:
 
   queue:
     build:
-      context: ./docker/php
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/php/Dockerfile
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     env_file:
@@ -94,8 +94,8 @@ services:
 
   scheduler:
     build:
-      context: ./docker/php
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/php/Dockerfile
     restart: unless-stopped
     command: php artisan schedule:work
     env_file:

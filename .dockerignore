@@ -1,0 +1,15 @@
+# App gerado em runtime pelo entrypoint (volume montado em /var/www/html)
+app/
+
+.git
+.github
+.idea
+.vscode
+
+*.log
+.env
+.env.*
+!/.env.docker.example
+
+node_modules
+vendor

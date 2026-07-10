@@ -109,6 +109,18 @@ ensure_permissions() {
     chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 }
 
+install_translations() {
+    src="/usr/local/share/tastyigniter-lang/pt_BR"
+    if [ ! -f "$src/admin.php" ]; then
+        return 0
+    fi
+
+    dest="/var/www/html/lang/vendor/igniter/pt_BR"
+    mkdir -p "$dest"
+    cp -f "$src/admin.php" "$src/main.php" "$src/system.php" "$dest/"
+    echo "Traduções pt_BR instaladas em $dest"
+}
+
 wait_for_app_files() {
     i=0
     while [ "$i" -lt 90 ]; do
@@ -166,6 +178,7 @@ fi
 wait_for_mysql
 ensure_app
 configure_env
+install_translations
 ensure_permissions
 run_install_if_needed
 ensure_permissions
