@@ -56,7 +56,7 @@ services:
       - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
 
       # HTTPS
-      - traefik.http.routers.lanchonete.rule=Host(`lanchonete.freddns.org`)
+      - traefik.http.routers.lanchonete.rule=Host(`lanchonete.freeddns.org`)
       - traefik.http.routers.lanchonete.entrypoints=${TRAEFIK_ENTRYPOINT_HTTPS:-websecure}
       - traefik.http.routers.lanchonete.tls=true
       - traefik.http.routers.lanchonete.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
@@ -64,7 +64,7 @@ services:
       - traefik.http.services.lanchonete.loadbalancer.server.port=80
 
       # HTTP -> HTTPS
-      - traefik.http.routers.lanchonete-http.rule=Host(`lanchonete.freddns.org`)
+      - traefik.http.routers.lanchonete-http.rule=Host(`lanchonete.freeddns.org`)
       - traefik.http.routers.lanchonete-http.entrypoints=${TRAEFIK_ENTRYPOINT_HTTP:-web}
       - traefik.http.routers.lanchonete-http.middlewares=lanchonete-https-redirect
       - traefik.http.middlewares.lanchonete-https-redirect.redirectscheme.scheme=https

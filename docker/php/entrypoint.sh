@@ -81,7 +81,7 @@ configure_env() {
     write_env_value "APP_NAME" "\"${APP_NAME:-TastyIgniter}\""
     write_env_value "APP_ENV" "${APP_ENV:-production}"
     write_env_value "APP_DEBUG" "${APP_DEBUG:-false}"
-    write_env_value "APP_URL" "${APP_URL:-https://lanchonete.freddns.org}"
+    write_env_value "APP_URL" "${APP_URL:-https://lanchonete.freeddns.org}"
 
     write_env_value "DB_CONNECTION" "mysql"
     write_env_value "DB_HOST" "${DB_HOST:-mysql}"
